@@ -1,50 +1,49 @@
-//////////////////////////
-// Imports
-//////////////////////////
-
 import express from "express";
 import path from "path";
 import dotenv from "dotenv";
+import { fileURLToPath } from "url";
 
 dotenv.config();
 
-//////////////////////////
-// Constants
-//////////////////////////
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-const port = 8080;
-const pathToDistFolder = path.join(__dirname, "../frontend/dist");
 const app = express();
+const port = 8080;
+const distPath = path.join(__dirname, "../frontend/dist");
 
 //////////////////////////
-// Middleware/Controllers
+// Serve frontend
 //////////////////////////
-const serveTrendingGifs = async (req, res) => {
+app.use(express.static(distPath));
+
+//////////////////////////
+// Giphy API Routes
+//////////////////////////
+
+// GET /api/gifs — Trending Gifs
+app.get("/api/gifs", async (req, res) => {
   const url = `https://api.giphy.com/v1/gifs/trending?limit=3&rating=g&api_key=${process.env.API_KEY}`;
-
   try {
     const response = await fetch(url);
     const data = await response.json();
-    res.send(data); // send back the Giphy response
+    res.send(data);
   } catch (error) {
-    console.error("Error fetching Giphy data:", error.message);
+    console.error("Error fetching trending GIFs:", error.message);
     res.status(503).send({ error: "Unable to fetch trending gifs" });
   }
-};
-
-const serverSearchedGifs = async (req, res) => {
-  const search = req.query;
-};
-
-const serveStatic = express.static(pathToDistFolder);
-
-app.use(serveStatic);
-
-// Routes
-app.get("/api/gifs", serveTrendingGifs);
+});
 
 //////////////////////////
-// Listener
+// Fallback: React App
 //////////////////////////
+app.get("*", (req, res) => {
+  res.sendFile(path.join(distPath, "index.html"));
+});
 
-app.listen(port, () => console.log(`listening at http://localhost:${port}`));
+//////////////////////////
+// Start Server
+//////////////////////////
+app.listen(port, () => {
+  console.log(`Server running on http://localhost:${port}`);
+});
