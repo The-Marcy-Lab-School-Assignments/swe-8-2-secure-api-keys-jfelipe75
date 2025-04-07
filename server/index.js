@@ -24,6 +24,7 @@ app.use(express.static(distPath));
 // GET /api/gifs — Trending Gifs
 app.get("/api/gifs", async (req, res) => {
   const url = `https://api.giphy.com/v1/gifs/trending?limit=3&rating=g&api_key=${process.env.API_KEY}`;
+  console.log("API KEY:", process.env.API_KEY); // should log actual key
   try {
     const response = await fetch(url);
     const data = await response.json();
